@@ -12,16 +12,41 @@ datasource db {
   provider = "postgresql"
 }
 
-model Author {
-  id Int @id @default(autoincrement())
-  email String @unique
-  name String?
-  article Article[]
+model User {
+  id       String    @id @default(dbgenerated("gen_random_uuid()")) @map("category_id") @db.Uuid
+  email    String    @unique @db.VarChar(256)
+  password String
+  name     String?   @db.VarChar(256)
+  role     Role      @default(USER)
+  articles Article[]
+
+  @@map("users")
 }
+
 model Article {
-  id Int @id @default(autoincrement())
-  title String
-  author Author @relation(fields: [authorId], references: [id])
-  content String?
-  authorId Int
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @map("post_id") @db.Uuid
+  title      String   @db.VarChar(256)
+  author     User     @relation(fields: [authorId], references: [id])
+  content    String?
+  authorId   String   @map("author_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  published  Boolean  @default(false)
+  categoryId String   @map("category_id")
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@map("posts")
+}
+
+model Category {
+  id       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String    @db.VarChar(256)
+  articles Article[]
+
+  @@map("categories")
+}
+
+enum Role {
+  USER
+  ADMIN
 }
